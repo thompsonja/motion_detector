@@ -4,7 +4,10 @@ import cv2
 import mog_difference
 import motion_detector
 import threading
+import trigger
+import trigger_state_machines
 import video_input
+import video_recorder
 
 
 def debug_display(active, mask):
@@ -18,6 +21,10 @@ def debug_display(active, mask):
 
   if cv2.waitKey(1) & 0xFF == ord('q'):
     video.final_image = True
+    
+
+def trigger_connection(active, mask):
+  motion_trigger.process_input(active)
 
 
 parser = argparse.ArgumentParser(description='Motion Detector')
@@ -40,4 +47,10 @@ algo = mog_difference.MogDifference(version, rate)
 video = video_input.VideoInput()
 detector = motion_detector.MotionDetector(video, algo, threshold, loglevel)
 detector.on_motion_status_updated.append(debug_display)
+detector.on_motion_status_updated.append(trigger_connection)
+state_machine = trigger_state_machines.TimedShutoffTriggerStateMachine(2,10)
+motion_trigger = trigger.Trigger(state_machine)
+recorder = video_recorder.VideoRecorder()
+motion_trigger.on_active.append(recorder.start)
+motion_trigger.on_inactive.append(recorder.stop)
 detector.start()

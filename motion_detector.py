@@ -18,7 +18,9 @@ class MotionDetector(object):
   def start(self):
     self.video_source.setup()
     self.looping = True
-    self.loop_thread.start()    
+    for i in range(0,20):
+      self.video_source.update_frame()
+    self.loop_thread.start()
 
   def stop(self):
     self.looping = False
